@@ -13,6 +13,7 @@ import (
 
 var allParameters = map[string][2]string{
 	"help":       {"Shows list of all commands.", "delfin help | delfin help <parameter>"},
+	"version":    {"Shows delfin version and github url.", "delfin version"},
 	"compress":   {"Compress a directory.", "delfin compress <directory location> <output location>"},
 	"decompress": {"Decompress a .delfin file.", "delfin decompress <.delfin file location> <output location>"},
 }
@@ -37,8 +38,12 @@ func HandleArguments() {
 	case "decompress":
 		HandleDecompress(parameters[1:])
 		break
+	case "version":
+		HandleVersion()
+		break
 	default:
-		fmt.Println(parameters)
+		fmt.Println("Parameter not found!")
+		os.Exit(2)
 	}
 }
 
@@ -128,7 +133,7 @@ func HandleCompress(params []string) {
 				os.Exit(4)
 			}
 
-			fmt.Println("Compress Completed. Please Check:", savedPath)
+			fmt.Println("Compressing is Completed. Please Check:", savedPath)
 		} else {
 			log.Fatal("Input or output location is not found or not a directory.")
 			os.Exit(3)
@@ -180,9 +185,14 @@ func HandleDecompress(params []string) {
 
 			CreateDirs(allDatas, output)
 			CreateFiles(allDatas, output)
+			fmt.Println("Decompressing is Completed.")
 		} else {
 			log.Fatal("Input or output location is not found. / Input is not a file. / Output is not a directory.")
 			os.Exit(3)
 		}
 	}
+}
+
+func HandleVersion() {
+	fmt.Println("Delfin Version: 0.0.1\nGitHub: https://github.com/5elenay/delfin")
 }
