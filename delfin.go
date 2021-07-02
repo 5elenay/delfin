@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"compress/zlib"
 	"os"
 )
 
@@ -36,4 +38,14 @@ func CheckDirectory(path string) bool {
 	}
 
 	return info.IsDir()
+}
+
+func EncodeByte(data []byte) []byte {
+	var input bytes.Buffer
+
+	writer := zlib.NewWriter(&input)
+	writer.Write(data)
+	writer.Close()
+
+	return input.Bytes()
 }

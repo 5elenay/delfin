@@ -1,11 +1,9 @@
 package main
 
 import (
-	"bytes"
-	"compress/zlib"
+	"encoding/base64"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -49,7 +47,7 @@ func HandleArguments() {
 
 func HandleHelp(params []string) {
 	if len(params) == 0 {
-		fmt.Println("Please don't forget to check documentation at GitHub!\nList off all commands:")
+		fmt.Println("Please don't forget to check documentation on GitHub!\nList off all commands:")
 		for key, value := range allParameters {
 			fmt.Printf("    %s: %s\n", key, value[0])
 		}
@@ -75,31 +73,32 @@ func HandleZip(params []string) {
 
 		if CheckDirectory(input) && CheckDirectory(output) {
 			var all_files []string
-			folder_splitted := strings.Split(output, "/")
+			folder_splitted := strings.Split(input, "/")
+
+			if len(folder_splitted) == 1 {
+				folder_splitted = strings.Split(input, "\\")
+			}
+
 			file_name := folder_splitted[len(folder_splitted)-1]
 
 			if file_name == "" {
 				file_name = fmt.Sprintf("compressed_%s", time.Now().Format("2006-01-02_15-04-05"))
 			}
 
-			fmt.Println(file_name)
-
 			err := filepath.Walk(input, func(path string, info fs.FileInfo, err error) error {
-				if CheckDirectory(path) == false {
-					var input bytes.Buffer
+				fmt.Println("Compressing", path)
 
-					data, readError := ioutil.ReadFile(path)
+				if CheckDirectory(path) == false {
+					data, readError := os.ReadFile(path)
 
 					if readError != nil {
-						log.Fatal("Unexcepted Error", readError)
+						log.Fatal(fmt.Sprintf("Unexcepted Error on %s ", path), readError)
 						os.Exit(4)
 					}
 
-					writer := zlib.NewWriter(&input)
-					writer.Write(data)
-					writer.Close()
+					result := EncodeByte(data)
 
-					formatted := fmt.Sprintf("%s:%d:%s", path, 0, input.String())
+					formatted := fmt.Sprintf("%s:%d:%s", path, 0, base64.StdEncoding.EncodeToString(result))
 					all_files = append(all_files, formatted)
 				} else {
 					formatted := fmt.Sprintf("%s:%d:%s", path, 1, "-")
@@ -109,11 +108,22 @@ func HandleZip(params []string) {
 			})
 
 			if err != nil {
-				log.Fatal("Unexcepted Error", err)
+				log.Fatal("Unexcepted Error ", err)
 				os.Exit(4)
 			}
 
-			os.WriteFile(fmt.Sprintf("%s/%s.delfin", output, file_name), []byte(strings.Join(all_files, "\n")), 0666)
+			data := EncodeByte([]byte(strings.Join(all_files, "\n")))
+
+			saved_path := fmt.Sprintf("%s/%s.delfin", output, file_name)
+
+			err = os.WriteFile(saved_path, data, 0666)
+
+			if err != nil {
+				log.Fatal("Unexcepted Error While Saving the Compressed Folder ", err)
+				os.Exit(4)
+			}
+
+			fmt.Println("Compress Completed. Please Check:", saved_path)
 		} else {
 			log.Fatal("Input or output location is not found / is not a directory.")
 			os.Exit(3)
