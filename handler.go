@@ -11,16 +11,10 @@ import (
 	"time"
 )
 
-type DelfinData struct {
-	data         []byte
-	path         string
-	is_directory bool
-}
-
 var allParameters = map[string][2]string{
-	"help":  {"Shows list of all commands.", "delfin help | delfin help <parameter>"},
-	"zip":   {"Compress a directory.", "delfin zip <directory location> <output location>"},
-	"unzip": {"Decompress a .delfin file.", "delfin unzip <.delfin file location> <output location>"},
+	"help":       {"Shows list of all commands.", "delfin help | delfin help <parameter>"},
+	"compress":   {"Compress a directory.", "delfin compress <directory location> <output location>"},
+	"decompress": {"Decompress a .delfin file.", "delfin decompress <.delfin file location> <output location>"},
 }
 
 func HandleArguments() {
@@ -37,8 +31,11 @@ func HandleArguments() {
 	case "help":
 		HandleHelp(parameters[1:])
 		break
-	case "zip":
-		HandleZip(parameters[1:])
+	case "compress":
+		HandleCompress(parameters[1:])
+		break
+	case "decompress":
+		HandleDecompress(parameters[1:])
 		break
 	default:
 		fmt.Println(parameters)
@@ -64,15 +61,15 @@ func HandleHelp(params []string) {
 	}
 }
 
-func HandleZip(params []string) {
+func HandleCompress(params []string) {
 	if len(params) < 2 {
 		log.Fatal("Please provide input and output location.")
 		os.Exit(2)
 	} else {
 		input, output := params[0], params[1]
 
-		if CheckDirectory(input) && CheckDirectory(output) {
-			var all_files []string
+		if CheckPath(input) == 1 && CheckPath(output) == 1 {
+			var allFiles []string
 			folder_splitted := strings.Split(input, "/")
 
 			if len(folder_splitted) == 1 {
@@ -88,7 +85,7 @@ func HandleZip(params []string) {
 			err := filepath.Walk(input, func(path string, info fs.FileInfo, err error) error {
 				fmt.Println("Compressing", path)
 
-				if CheckDirectory(path) == false {
+				if CheckPath(path) == 2 {
 					data, readError := os.ReadFile(path)
 
 					if readError != nil {
@@ -96,13 +93,21 @@ func HandleZip(params []string) {
 						os.Exit(4)
 					}
 
-					result := EncodeByte(data)
+					delfinData := DelfinData{
+						EncodeByte(data),
+						strings.Replace(path, input, file_name, -1),
+						false,
+					}
 
-					formatted := fmt.Sprintf("%s:%d:%s", path, 0, base64.StdEncoding.EncodeToString(result))
-					all_files = append(all_files, formatted)
-				} else {
-					formatted := fmt.Sprintf("%s:%d:%s", path, 1, "-")
-					all_files = append(all_files, formatted)
+					allFiles = append(allFiles, delfinData.Format())
+				} else if CheckPath(path) == 1 {
+					delfinData := DelfinData{
+						[]byte{},
+						strings.Replace(path, input, file_name, -1),
+						true,
+					}
+
+					allFiles = append(allFiles, delfinData.Format())
 				}
 				return err
 			})
@@ -112,20 +117,71 @@ func HandleZip(params []string) {
 				os.Exit(4)
 			}
 
-			data := EncodeByte([]byte(strings.Join(all_files, "\n")))
+			data := EncodeByte([]byte(strings.Join(allFiles, "\n")))
 
-			saved_path := fmt.Sprintf("%s/%s.delfin", output, file_name)
+			savedPath := fmt.Sprintf("%s/%s.delfin", output, file_name)
 
-			err = os.WriteFile(saved_path, data, 0666)
+			err = os.WriteFile(savedPath, data, 0666)
 
 			if err != nil {
 				log.Fatal("Unexcepted Error While Saving the Compressed Folder ", err)
 				os.Exit(4)
 			}
 
-			fmt.Println("Compress Completed. Please Check:", saved_path)
+			fmt.Println("Compress Completed. Please Check:", savedPath)
 		} else {
-			log.Fatal("Input or output location is not found / is not a directory.")
+			log.Fatal("Input or output location is not found or not a directory.")
+			os.Exit(3)
+		}
+	}
+}
+
+func HandleDecompress(params []string) {
+	if len(params) < 2 {
+		log.Fatal("Please provide input and output location.")
+		os.Exit(2)
+	} else {
+		input, output := params[0], params[1]
+
+		if CheckPath(input) == 2 && CheckPath(output) == 1 {
+			data, readError := os.ReadFile(input)
+
+			if readError != nil {
+				log.Fatal(fmt.Sprintf("Unexcepted Error on %s ", input), readError)
+				os.Exit(4)
+			}
+
+			data = DecodeByte(data)
+			var allDatas []DelfinData
+
+			for _, line := range strings.Split(string(data), "\n") {
+				splittedLine := strings.SplitN(line, ":", 3)
+
+				convertedData, convertError := base64.StdEncoding.DecodeString(splittedLine[2])
+
+				if convertError != nil {
+					convertedData = []byte{}
+				} else {
+					convertedData = DecodeByte(convertedData)
+				}
+
+				var isDir bool
+
+				if splittedLine[1] == "1" {
+					isDir = true
+				}
+
+				allDatas = append(allDatas, DelfinData{
+					convertedData,
+					splittedLine[0],
+					isDir,
+				})
+			}
+
+			CreateDirs(allDatas, output)
+			CreateFiles(allDatas, output)
+		} else {
+			log.Fatal("Input or output location is not found. / Input is not a file. / Output is not a directory.")
 			os.Exit(3)
 		}
 	}
