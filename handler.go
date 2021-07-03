@@ -11,11 +11,35 @@ import (
 	"time"
 )
 
-var allParameters = map[string][2]string{
-	"help":       {"Shows list of all commands.", "delfin help | delfin help <parameter>"},
-	"version":    {"Shows delfin version and github url.", "delfin version"},
-	"compress":   {"Compress a directory.", "delfin compress <directory location> <output location>"},
-	"decompress": {"Decompress a .delfin file.", "delfin decompress <.delfin file location> <output location>"},
+var allParameters []Parameter
+
+func init() {
+	allParameters = []Parameter{
+		{
+			"help",
+			"Shows list of all commands.",
+			"delfin help | delfin help <parameter>",
+			HandleHelp,
+		},
+		{
+			"version",
+			"Shows Delfin's current version and GitHub url.",
+			"delfin version",
+			HandleVersion,
+		},
+		{
+			"compress",
+			"Compress a directory.",
+			"delfin compress <directory location> <output location>",
+			HandleCompress,
+		},
+		{
+			"decompress",
+			"Decompress a .delfin file.",
+			"delfin decompress <.delfin file location> <output location>",
+			HandleDecompress,
+		},
+	}
 }
 
 func HandleArguments() {
@@ -27,21 +51,17 @@ func HandleArguments() {
 	}
 
 	parameter := strings.ToLower(parameters[0])
+	var found bool
 
-	switch parameter {
-	case "help":
-		HandleHelp(parameters[1:])
-		break
-	case "compress":
-		HandleCompress(parameters[1:])
-		break
-	case "decompress":
-		HandleDecompress(parameters[1:])
-		break
-	case "version":
-		HandleVersion()
-		break
-	default:
+	for _, param := range allParameters {
+		if param.name == parameter {
+			param.function(parameters[1:])
+			found = true
+			break
+		}
+	}
+
+	if !found {
 		fmt.Println("Parameter not found!")
 		os.Exit(2)
 	}
@@ -50,17 +70,25 @@ func HandleArguments() {
 func HandleHelp(params []string) {
 	if len(params) == 0 {
 		fmt.Println("Please don't forget to check documentation on GitHub!\nList off all commands:")
-		for key, value := range allParameters {
-			fmt.Printf("    %s: %s\n", key, value[0])
+		for _, item := range allParameters {
+			fmt.Printf("    %s: %s\n", item.name, item.description)
 		}
 		fmt.Println("\nFor more information, Please type delfin help <parameter>.")
 	} else {
-		param := params[0]
+		param := strings.ToLower(params[0])
 
-		if value, status := allParameters[strings.ToLower(param)]; status {
-			fmt.Printf("Description: %s\nUsage: %s\n", value[0], value[1])
-		} else {
-			log.Fatal("Parameter not found!")
+		var found bool
+
+		for _, item := range allParameters {
+			if item.name == param {
+				fmt.Printf("Description: %s\nUsage: %s\n", item.description, item.usage)
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			fmt.Println("Parameter not found!")
 			os.Exit(2)
 		}
 	}
@@ -193,6 +221,6 @@ func HandleDecompress(params []string) {
 	}
 }
 
-func HandleVersion() {
-	fmt.Println("Delfin Version: 0.0.1\nGitHub: https://github.com/5elenay/delfin")
+func HandleVersion(params []string) {
+	fmt.Println("Delfin Version: 0.0.2\nRelease: Alpha\nGitHub: https://github.com/5elenay/delfin")
 }
