@@ -1,8 +1,12 @@
 # Delfin
 
+![Stars](https://img.shields.io/github/stars/5elenay/delfin)
+![Commits](https://img.shields.io/github/commit-activity/w/5elenay/delfin)
+
 🐬 Command line tool for compress & decompress a folder.
 
 ## Note
+
 Delfin is in alpha-release so it may have some bugs. If you found a bug, please fork the project and send a pull request!
 
 ## Installation
@@ -47,52 +51,70 @@ and it will compile Delfin now. When its finished it will run `./delfin help` fo
 ## Commands
 
 ### help
+
 Shows all the commands. If you add an extra parameter it will show to extra informations about the command.
 
 #### Usage
+
 - `delfin help`
 - `delfin help <command>`
 
 #### Example(s)
+
 ```bash
 delfin help
 ```
+
 ```bash
 delfin help compress
 ```
+
 ### version
+
 Shows the version and github url.
 
 #### Usage
+
 - `delfin version`
 
 #### Example
+
 ```bash
 delfin version
 ```
+
 ### compress
+
 Compress a folder to `.delfin` format.
 
 #### Usage
+
 - `delfin compress <folder location> <output location>`
 
 #### Example(s)
+
 ```bash
 delfin compress ./example .
 ```
+
 ```bash
 delfin compress ./example ./files
 ```
+
 ### decompress
+
 Decompress a `.delfin` file.
 
 #### Usage
+
 - `delfin decompress <file location> <output location>`
 
 #### Example(s)
+
 ```bash
 delfin decompress example.delfin .
 ```
+
 ```bash
 delfin decompress example.delfin ./folders
 ```
