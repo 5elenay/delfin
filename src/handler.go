@@ -115,6 +115,7 @@ func HandleCompress(params []string) {
 				file_name = fmt.Sprintf("compressed_%s", time.Now().Format("2006-01-02_15-04-05"))
 			}
 
+			fmt.Println("Started the Compressing:", file_name)
 			err := filepath.Walk(input, func(path string, info fs.FileInfo, err error) error {
 				fmt.Println("Compressing", path)
 
