@@ -20,11 +20,11 @@ If it works, you can add Delfin to the path now. If not go to the **Compiling** 
 
 ## Compiling
 
-If you can't find a version for your operating system / cpu architecture, You can compile delfin yourself easily.
+If you can't find a version for your system / architecture, You can compile Delfin yourself easily.
 
 ### Pre-Requests
 
-Make sure you have GO downloaded. For check run `go version`. If it works you already have GO in your computer. If not, download from [official website](https://golang.org/dl/).
+Make sure you have Go downloaded. For check run `go version`. If it works you already have Go in your computer. If not, download from [official website](https://golang.org/dl/).
 
 ### Windows
 
@@ -47,6 +47,16 @@ cd delfin
 ```
 
 and it will compile Delfin now. When its finished it will run `./delfin help` for make sure it works.
+
+### Other
+
+Goto the `src` folder and run:
+
+```sh
+go build
+```
+
+After this, it will give you Delfin's binary file.
 
 ## Commands
 
@@ -81,6 +91,20 @@ Shows the version and github url.
 
 ```bash
 delfin version
+```
+
+### check
+
+Check Delfin for updates.
+
+#### Usage
+
+- `delfin check`
+
+#### Example
+
+```bash
+delfin check
 ```
 
 ### compress

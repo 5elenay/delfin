@@ -1,6 +1,6 @@
 {
-  "latest": "0.0.2",
-  "current": "0.0.2",
+  "latest": "0.1.0",
+  "current": "0.1.0",
   "license": "MIT",
   "go-version": "1.16.5"
 }

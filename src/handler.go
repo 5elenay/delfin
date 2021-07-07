@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,6 +14,7 @@ import (
 )
 
 var allParameters []Parameter
+var current string = "0.1.0"
 
 func init() {
 	allParameters = []Parameter{
@@ -38,6 +41,12 @@ func init() {
 			"Decompress a .delfin file.",
 			"delfin decompress <.delfin file location> <output location>",
 			HandleDecompress,
+		},
+		{
+			"check",
+			"Check avaible updates for Delfin.",
+			"delfin check",
+			HandleUpdateCheck,
 		},
 	}
 }
@@ -223,5 +232,34 @@ func HandleDecompress(params []string) {
 }
 
 func HandleVersion(params []string) {
-	fmt.Println("Delfin Version: 0.0.2\nRelease: Alpha\nGitHub: https://github.com/5elenay/delfin")
+	fmt.Printf("Delfin Version: %s\nRelease: Alpha\nGitHub: https://github.com/5elenay/delfin\n", current)
+}
+
+func HandleUpdateCheck(params []string) {
+	fmt.Printf("Checking For Updates... [Current Version: %s]\n", current)
+
+	response, err := http.Get("https://raw.githubusercontent.com/5elenay/delfin/main/metadata.json")
+
+	if err != nil {
+		log.Fatal("Unexcepted Error: ", err)
+		os.Exit(4)
+	}
+
+	defer response.Body.Close()
+
+	var result Metadata
+
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&result)
+
+	if err != nil {
+		log.Fatal("Unexcepted Error: ", err)
+		os.Exit(4)
+	}
+
+	if result.Latest != current {
+		fmt.Printf("Looks like you have an update for Delfin. Please check: https://github.com/5elenay/delfin/releases/latest\nLatest Release: %s\nCurrent: %s\n", result.Latest, current)
+	} else {
+		fmt.Println("Looks like you are using the latest version of Delfin!")
+	}
 }

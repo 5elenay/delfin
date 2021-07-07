@@ -25,11 +25,11 @@ func (dd DelfinData) Format() string {
 	return fmt.Sprintf("%s:%d:%s", dd.path, isDir, data)
 }
 
-type FuncPlaceHolder func(params []string)
-
 type Parameter struct {
-	name        string
-	description string
-	usage       string
-	function    FuncPlaceHolder
+	name, description, usage string
+	function                 func(params []string)
+}
+
+type Metadata struct {
+	Latest, Current, License string
 }
